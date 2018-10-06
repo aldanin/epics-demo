@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import "./App.css";
 import { connect } from "react-redux";
+import * as actions from './actions'
 
 class App extends Component {
   render() {
@@ -9,8 +10,14 @@ class App extends Component {
         <div className="Age-label">
           your age: <span>{this.props.age}</span>
         </div>
-        <button onClick={this.props.onAgeUp}>Age UP</button>
-        <button onClick={this.props.onAgeDown}>Age Down</button>
+        <button onClick={this.props.onInc}>Inc</button>
+        <button onClick={this.props.onDec}>Dec</button>
+        <button onClick={this.props.onIncAsync}>IncAsync</button>
+          <div>
+              <div>Controls</div>
+              <button onClick={this.props.onCancel}>Cancel</button>
+              <button onClick={this.props.onContinue}>Continue</button>
+          </div>
       </div>
     );
   }
@@ -18,16 +25,20 @@ class App extends Component {
 
 const mapStateToProps = state => {
   return {
-    age: state.age
+    age: state.counter
   };
 };
 
 const mapDispachToProps = dispatch => {
   return {
-    onAgeUp: () => dispatch({ type: "AGE_UP", value: 1 }),
-    onAgeDown: () => dispatch({ type: "AGE_DOWN", value: 1 })
+      onInc: () => dispatch(actions.increment(1)),
+      onDec: () => dispatch(actions.decrement(1)),
+      onIncAsync: () => dispatch(actions.asyncIncrement(1)),
+      onCancel: () => dispatch(actions.control({command: 'cancel'})),
+      onContinue: () => dispatch(actions.control({command: 'continue'})),
   };
 };
+
 export default connect(
   mapStateToProps,
   mapDispachToProps
