@@ -1,8 +1,8 @@
-import { put, takeEvery, all, call, fork, takeLatest,  cancel, select, take} from 'redux-saga/effects';
+import {put, takeEvery, all, call, fork, takeLatest, cancel, select, take} from 'redux-saga/effects';
 
-const delay = (ms) => {
+const delay=(ms) => {
     return new Promise((res, rej) => {
-        setTimeout(()=> {
+        setTimeout(() => {
             res('asasas')
         }, ms)
     })
@@ -16,11 +16,11 @@ export function* helloSaga() {
 
 // Our worker Saga: will perform the async increment task
 export function* incrementAsync() {
-    const task  = yield call(delay, 1000);
-    const state = yield select()
-    console.log('ad, state',task, state);
+    const task=yield call(delay, 1000);
+    const state=yield select()
+    console.log('ad, state', task, state);
 
-    yield put({ type: 'INCREMENT' })
+    yield put({type : 'INCREMENT'})
 }
 
 // Our watcher Saga: spawn a new incrementAsync task on each INCREMENT_ASYNC
@@ -29,42 +29,48 @@ export function* watchIncrementAsync() {
 }
 
 export function* watchMethods(action) {
-    const {payload} = action;
-    // const task  = yield take("CONTINUE", "CANCEL");
+    const {payload}=action;
 
-   console.log(task);
-    const origAction = { type: payload.type, value: payload.value };
-    yield put(origAction);
-}
+    const isEdit=yield select(state => state.isEdit);
 
-export function* watchControl(payload) {
-
-}
-
-// notice how we now only export the rootSaga
-// single entry point to start all Sagas at once
-export default function* rootSaga() {
-    let task;
-    while (task = yield take("METHODS")) {
-        // starts the task in the background
-        const bgSyncTask = yield fork(watchMethods, task)
-        console.log(bgSyncTask)
-
-        // wait for the user stop action
-        const control = yield take("CONTROL")
-        // user clicked stop. cancel the background task
-        // this will cause the forked bgSync task to jump into its finally block
-        if(control.payload && control.payload.command === "cancel") {
-            console.log("cancel")
-            yield put("CANCEL")
-        }
-        else  if(control.payload && control.payload.command === "continue") {
-            console.log("continue")
-            yield put("CONTINUE")
+    if (isEdit) {
+        const task=yield take(["CANCEL", "CONTINUE"]);
+        if (task.type === "CONTINUE") {
+            const origAction={type : payload.type, value : payload.value};
+            yield put(origAction);
+            yield put({type: "IS_EDIT", isEdit: false})
         }
     }
-    // yield takeLatest("METHODS", watchMethods);
-    // yield takeLatest("CONTROL", watchControl);
+    else {
+        const origAction={type : payload.type, value : payload.value};
+        yield put(origAction);
+    }
 }
 
-//========================
+export default function* rootSaga() {
+    let task;
+
+    while (task=yield take("METHODS")) {
+        // starts the task in the background
+        const bgSyncTask=yield fork(watchMethods, task)
+
+        const isEdit = yield select(state => state.isEdit);
+        if (isEdit) {
+            // wait for the user stop action
+            const control=yield take("CONTROL")
+            // user clicked stop. cancel the background task
+            // this will cause the forked bgSync task to jump into its finally block
+            if (control.payload && control.payload.command === "cancel") {
+                console.log("cancel")
+                yield put({
+                    type : "CANCEL",
+                })
+            }
+            else if (control.payload && control.payload.command === "continue") {
+                yield put({
+                    type : "CONTINUE",
+                })
+            }
+        }
+    }
+}

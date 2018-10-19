@@ -1,5 +1,6 @@
 const initialState = {
-    counter: 0
+    counter: 0,
+    isEdit: false,
 };
 
 const reducer = (state=initialState, action) => {
@@ -14,6 +15,12 @@ const reducer = (state=initialState, action) => {
             return newState
         case 'DECREMENT':
             newState.counter--;
+            return newState;
+        case 'OK':
+            newState.counter = newState.counter + 1000;
+            return newState;
+        case 'IS_EDIT':
+            newState.isEdit = action.isEdit;
             return newState;
         default:
             return newState
